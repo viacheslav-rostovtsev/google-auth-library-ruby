@@ -17,6 +17,7 @@ require "json"
 require "signet/oauth_2/client"
 
 require "googleauth/credentials_loader"
+require "googleauth/errors"
 
 module Google
   module Auth
@@ -392,7 +393,7 @@ module Google
       #   timeouts, etc.
       #
       def initialize source_creds, options = {}
-        raise "The source credentials passed to Google::Auth::Credentials.new were nil." if source_creds.nil?
+        raise InitializationError, "The source credentials passed to Google::Auth::Credentials.new were nil." if source_creds.nil?
 
         options = symbolize_hash_keys options
         @project_id = options[:project_id] || options[:project]
@@ -556,7 +557,7 @@ module Google
       # Verify that the keyfile argument is a file.
       def verify_keyfile_exists! keyfile
         exists = ::File.file? keyfile
-        raise "The keyfile '#{keyfile}' is not a valid file." unless exists
+        raise InitializationError, "The keyfile '#{keyfile}' is not a valid file." unless exists
       end
 
       # Initializes the Signet client.

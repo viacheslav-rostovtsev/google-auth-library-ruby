@@ -13,6 +13,7 @@
 # limitations under the License.
 
 require "google-cloud-env"
+require "googleauth/errors"
 require "googleauth/signet"
 
 module Google
@@ -142,15 +143,15 @@ module Google
           when 200
             build_token_hash resp.body, resp.headers["content-type"], resp.retrieval_monotonic_time
           when 403, 500
-            raise Signet::UnexpectedStatusError, "Unexpected error code #{resp.status} #{UNEXPECTED_ERROR_SUFFIX}"
+            raise UnexpectedStatusError, "Unexpected error code #{resp.status} #{UNEXPECTED_ERROR_SUFFIX}"
           when 404
-            raise Signet::AuthorizationError, NO_METADATA_SERVER_ERROR
+            raise AuthorizationError, NO_METADATA_SERVER_ERROR
           else
-            raise Signet::AuthorizationError, "Unexpected error code #{resp.status} #{UNEXPECTED_ERROR_SUFFIX}"
+            raise AuthorizationError, "Unexpected error code #{resp.status} #{UNEXPECTED_ERROR_SUFFIX}"
           end
         rescue Google::Cloud::Env::MetadataServerNotResponding => e
           log_fetch_err e
-          raise Signet::AuthorizationError, e.message
+          raise AuthorizationError, e.message
         end
       end
 

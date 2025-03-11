@@ -16,6 +16,7 @@ require "base64"
 require "json"
 require "signet/oauth_2/client"
 require "googleauth/base_client"
+require "googleauth/errors"
 
 module Signet
   # OAuth2 supports OAuth2 authentication.
@@ -114,12 +115,13 @@ module Signet
 
         begin
           yield.tap { |resp| log_response resp }
+        rescue Signet::AuthorizationError => e
+          log_auth_error e
+          raise Google::Auth::AuthorizationError, e.message
+        rescue Signet::ParseError => e
+          log_auth_error e
+          raise Google::Auth::ParseError, e.message
         rescue StandardError => e
-          if e.is_a?(Signet::AuthorizationError) || e.is_a?(Signet::ParseError)
-            log_auth_error e
-            raise e
-          end
-
           if retry_count < max_retry_count
             log_transient_error e
             retry_count += 1
@@ -128,7 +130,7 @@ module Signet
           else
             log_retries_exhausted e
             msg = "Unexpected error: #{e.inspect}"
-            raise Signet::AuthorizationError, msg
+            raise Google::Auth::AuthorizationError, msg
           end
         end
       end

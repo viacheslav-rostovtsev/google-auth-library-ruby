@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require "googleauth/signet"
 require "googleauth/base_client"
+require "googleauth/errors"
 require "googleauth/helpers/connection"
 
 module Google
@@ -224,10 +224,10 @@ module Google
           access_token
         when 403, 500
           msg = "Unexpected error code #{resp.status}.\n #{resp.env.response_body} #{ERROR_SUFFIX}"
-          raise Signet::UnexpectedStatusError, msg
+          raise UnexpectedStatusError, msg
         else
           msg = "Unexpected error code #{resp.status}.\n #{resp.env.response_body} #{ERROR_SUFFIX}"
-          raise Signet::AuthorizationError, msg
+          raise AuthorizationError, msg
         end
       end
 
@@ -259,7 +259,7 @@ module Google
         when String
           Time.parse time
         else
-          raise "Invalid time value #{time}"
+          raise CredentialsError, "Invalid time value #{time}"
         end
       end
 

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 require "googleauth/base_client"
+require "googleauth/errors"
 
 module Google
   module Auth
@@ -132,7 +133,7 @@ module Google
       # @raise [StandardError] If the token is expired.
       def fetch_access_token! _options = {}
         if @expires_at && Time.now >= @expires_at
-          raise "Bearer token has expired."
+          raise CredentialsError, "Bearer token has expired."
         end
 
         nil

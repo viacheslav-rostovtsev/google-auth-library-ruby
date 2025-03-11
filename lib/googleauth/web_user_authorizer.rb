@@ -13,6 +13,7 @@
 # limitations under the License.
 
 require "multi_json"
+require "googleauth/errors"
 require "googleauth/signet"
 require "googleauth/user_authorizer"
 require "googleauth/user_refresh"
@@ -181,7 +182,7 @@ module Google
       #  requested scopes
       # @return [Google::Auth::UserRefreshCredentials]
       #  Stored credentials, nil if none present
-      # @raise [Signet::AuthorizationError]
+      # @raise [Google::Auth::AuthorizationError]
       #  May raise an error if an authorization code is present in the session
       #  and exchange of the code fails
       def get_credentials user_id, request = nil, scope = nil
@@ -225,12 +226,12 @@ module Google
       # @param [Rack::Request] request
       #  Current request
       def self.validate_callback_state state, request
-        raise Signet::AuthorizationError, MISSING_AUTH_CODE_ERROR if state[AUTH_CODE_KEY].nil?
+        raise AuthorizationError, MISSING_AUTH_CODE_ERROR if state[AUTH_CODE_KEY].nil?
         if state[ERROR_CODE_KEY]
-          raise Signet::AuthorizationError,
+          raise AuthorizationError,
                 format(AUTHORIZATION_ERROR, state[ERROR_CODE_KEY])
         elsif request.session[XSRF_KEY] != state[SESSION_ID_KEY]
-          raise Signet::AuthorizationError, INVALID_STATE_TOKEN_ERROR
+          raise AuthorizationError, INVALID_STATE_TOKEN_ERROR
         end
       end
 

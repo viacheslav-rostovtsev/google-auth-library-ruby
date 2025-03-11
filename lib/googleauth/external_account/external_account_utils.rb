@@ -13,6 +13,7 @@
 # limitations under the License.require "time"
 
 require "googleauth/base_client"
+require "googleauth/errors"
 require "googleauth/helpers/connection"
 require "googleauth/oauth2/sts_client"
 
@@ -83,7 +84,7 @@ module Google
           when String
             Time.parse time
           else
-            raise "Invalid time value #{time}"
+            raise CredentialsError, "Invalid time value #{time}"
           end
         end
 

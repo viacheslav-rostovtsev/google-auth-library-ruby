@@ -16,6 +16,7 @@ require "multi_json"
 require "stringio"
 
 require "googleauth/credentials_loader"
+require "googleauth/errors"
 require "googleauth/external_account"
 require "googleauth/service_account"
 require "googleauth/service_account_jwt_header"
@@ -57,7 +58,7 @@ module Google
       def self.read_creds
         env_var = CredentialsLoader::ACCOUNT_TYPE_VAR
         type = ENV[env_var]
-        raise "#{env_var} is undefined in env" unless type
+        raise InitializationError, "#{env_var} is undefined in env" unless type
         case type
         when "service_account"
           ServiceAccountCredentials
@@ -66,7 +67,7 @@ module Google
         when "external_account"
           ExternalAccount::Credentials
         else
-          raise "credentials type '#{type}' is not supported"
+          raise InitializationError, "credentials type '#{type}' is not supported"
         end
       end
 
@@ -74,7 +75,7 @@ module Google
       def self.determine_creds_class json_key_io
         json_key = MultiJson.load json_key_io.read
         key = "type"
-        raise "the json is missing the '#{key}' field" unless json_key.key? key
+        raise InitializationError, "the json is missing the '#{key}' field" unless json_key.key? key
         type = json_key[key]
         case type
         when "service_account"
@@ -84,7 +85,7 @@ module Google
         when "external_account"
           [json_key, ExternalAccount::Credentials]
         else
-          raise "credentials type '#{type}' is not supported"
+          raise InitializationError, "credentials type '#{type}' is not supported"
         end
       end
     end

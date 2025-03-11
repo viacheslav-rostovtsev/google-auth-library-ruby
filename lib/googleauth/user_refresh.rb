@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require "googleauth/signet"
 require "googleauth/credentials_loader"
+require "googleauth/errors"
 require "googleauth/scope_util"
+require "googleauth/signet"
 require "multi_json"
 
 module Google
@@ -70,7 +71,7 @@ module Google
         json_key = MultiJson.load json_key_io.read
         wanted = ["client_id", "client_secret", "refresh_token"]
         wanted.each do |key|
-          raise "the json is missing the #{key} field" unless json_key.key? key
+          raise InitializationError, "the json is missing the #{key} field" unless json_key.key? key
         end
         json_key
       end
@@ -117,8 +118,7 @@ module Google
             self.refresh_token = nil
             self.expires_at = 0
           else
-            raise(Signet::AuthorizationError,
-                  "Unexpected error code #{resp.status}")
+            raise(AuthorizationError, "Unexpected error code #{resp.status}")
           end
         end
       end
