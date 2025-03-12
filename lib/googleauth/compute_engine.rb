@@ -127,6 +127,11 @@ module Google
 
       # Overrides the super class method to change how access tokens are
       # fetched.
+      #
+      # @param [Hash] _options Options for token fetch (not used)
+      # @return [Hash] The token data hash
+      # @raise [Google::Auth::UnexpectedStatusError] On unexpected HTTP status codes
+      # @raise [Google::Auth::AuthorizationError] If metadata server is unavailable or returns error
       def fetch_access_token _options = {}
         query, entry =
           if token_type == :id_token

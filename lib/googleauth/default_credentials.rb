@@ -43,6 +43,9 @@ module Google
       # information, refer to [Validate credential configurations from external
       # sources](https://cloud.google.com/docs/authentication/external/externally-sourced-credentials).
       #
+      # @param options [Hash] Options for creating the credentials
+      # @return [Google::Auth::Credentials] The credentials instance
+      # @raise [Google::Auth::InitializationError] If the credentials cannot be determined
       def self.make_creds options = {}
         json_key_io = options[:json_key_io]
         if json_key_io
@@ -55,6 +58,10 @@ module Google
         end
       end
 
+      # Reads the credential type from environment and returns the appropriate class
+      #
+      # @return [Class] The credential class to use
+      # @raise [Google::Auth::InitializationError] If the credentials type is undefined or unsupported
       def self.read_creds
         env_var = CredentialsLoader::ACCOUNT_TYPE_VAR
         type = ENV[env_var]
@@ -72,6 +79,10 @@ module Google
       end
 
       # Reads the input json and determines which creds class to use.
+      #
+      # @param json_key_io [IO] An IO object containing the JSON key
+      # @return [Array(Hash, Class)] The JSON key and the credential class to use
+      # @raise [Google::Auth::InitializationError] If the JSON is missing the type field or has an unsupported type
       def self.determine_creds_class json_key_io
         json_key = MultiJson.load json_key_io.read
         key = "type"

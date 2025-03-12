@@ -97,6 +97,8 @@ module Google
           :access_token
         end
 
+        # A common method for Other credentials to call during initialization
+        # @raise [Google::Auth::InitializationError] If workforce_pool_user_project is incorrectly set
         def base_setup options
           self.default_connection = options[:connection]
 
@@ -122,7 +124,7 @@ module Google
             connection: default_connection
           )
           return unless @workforce_pool_user_project && !is_workforce_pool?
-          raise CredentialsError, "workforce_pool_user_project should not be set for non-workforce pool credentials."
+          raise InitializationError, "workforce_pool_user_project should not be set for non-workforce pool credentials."
         end
 
         def exchange_token
@@ -161,6 +163,12 @@ module Google
           end
         end
 
+        # Exchanges a token for an impersonated service account access token
+        #
+        # @param [String] token The token to exchange
+        # @param [Hash] _options Additional options (not used)
+        # @return [Hash] The response containing the impersonated access token
+        # @raise [Google::Auth::CredentialsError] If the impersonation request fails
         def get_impersonated_access_token token, _options = {}
           log_impersonated_token_request token
           response = connection.post @service_account_impersonation_url do |req|

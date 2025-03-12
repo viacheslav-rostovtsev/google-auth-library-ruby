@@ -37,8 +37,10 @@ module Google
 
         # Create a new instance of the STSClient.
         #
-        # @param [String] token_exchange_endpoint
-        #  The token exchange endpoint.
+        # @param [Hash] options Configuration options
+        # @option options [String] :token_exchange_endpoint The token exchange endpoint
+        # @option options [Faraday::Connection] :connection The Faraday connection to use
+        # @raise [Google::Auth::InitializationError] If token_exchange_endpoint is nil
         def initialize options = {}
           raise InitializationError, "Token exchange endpoint can not be nil" if options[:token_exchange_endpoint].nil?
           self.default_connection = options[:connection]
@@ -68,6 +70,8 @@ module Google
         #   The optional additional headers to pass to the token exchange endpoint.
         #
         # @return [Hash] A hash containing the token exchange response.
+        # @raise [ArgumentError] If required options are missing
+        # @raise [Google::Auth::AuthorizationError] If the token exchange request fails
         def exchange_token options = {}
           missing_required_opts = [:grant_type, :subject_token, :subject_token_type] - options.keys
           unless missing_required_opts.empty?

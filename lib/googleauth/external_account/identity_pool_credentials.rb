@@ -33,10 +33,12 @@ module Google
 
         # Initialize from options map.
         #
-        # @param [string] audience
-        # @param [hash{symbol => value}] credential_source
-        #     credential_source is a hash that contains either source file or url.
-        #     credential_source_format is either text or json. To define how we parse the credential response.
+        # @param [Hash] options Configuration options
+        # @option options [String] :audience The audience for the token
+        # @option options [Hash{Symbol => Object}] :credential_source A hash containing either source file or url.
+        #     credential_source_format is either text or json to define how to parse the credential response.
+        # @raise [Google::Auth::InitializationError] If credential_source format is invalid, field_name is missing, 
+        #     contains ambiguous sources, or is missing required fields
         #
         def initialize options = {}
           base_setup options
@@ -52,6 +54,9 @@ module Google
         end
 
         # Implementation of BaseCredentials retrieve_subject_token!
+        #
+        # @return [String] The subject token 
+        # @raise [Google::Auth::CredentialsError] If the token can't be parsed from JSON or is missing
         def retrieve_subject_token!
           content, resource_name = token_data
           if @credential_source_format_type == "text"
@@ -71,6 +76,10 @@ module Google
 
         private
 
+        # Validates input
+        #
+        # @raise [Google::Auth::InitializationError] If credential_source format is invalid, field_name is missing, 
+        #     contains ambiguous sources, or is missing required fields
         def validate_credential_source
           # `environment_id` is only supported in AWS or dedicated future external account credentials.
           unless @credential_source[:environment_id].nil?
@@ -96,12 +105,21 @@ module Google
           @credential_source_file.nil? ? url_data : file_data
         end
 
+        # Reads data from a file source
+        #
+        # @return [Array(String, String)] The file content and file path
+        # @raise [Google::Auth::CredentialsError] If the source file doesn't exist
         def file_data
           raise CredentialsError, "File #{@credential_source_file} was not found." unless File.exist? @credential_source_file
           content = File.read @credential_source_file, encoding: "utf-8"
           [content, @credential_source_file]
         end
 
+        # Fetches data from a URL source
+        #
+        # @return [Array(String, String)] The response body and URL
+        # @raise [Google::Auth::CredentialsError] If there's an error retrieving data from the URL
+        #   or if the response is not successful
         def url_data
           begin
             response = connection.get @credential_source_url do |req|

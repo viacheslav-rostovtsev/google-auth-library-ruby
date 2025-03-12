@@ -41,7 +41,7 @@ module Google
 
       # Create a UserRefreshCredentials.
       #
-      # @param json_key_io [IO] an IO from which the JSON key can be read
+      # @param json_key_io [IO] An IO object containing the JSON key
       # @param scope [string|array|nil] the scope(s) to access
       def self.make_creds options = {}
         json_key_io, scope = options.values_at :json_key_io, :scope
@@ -65,8 +65,11 @@ module Google
           .configure_connection(options)
       end
 
-      # Reads the client_id, client_secret and refresh_token fields from the
-      # JSON key.
+      # Reads a JSON key from an IO object and extracts required fields.
+      #
+      # @param [IO] json_key_io An IO object containing the JSON key
+      # @return [Hash] The parsed JSON key
+      # @raise [Google::Auth::InitializationError] If the JSON is missing required fields
       def self.read_json_key json_key_io
         json_key = MultiJson.load json_key_io.read
         wanted = ["client_id", "client_secret", "refresh_token"]
@@ -107,6 +110,10 @@ module Google
       end
 
       # Revokes the credential
+      #
+      # @param [Hash] options Options for revoking the credential
+      # @option options [Faraday::Connection] :connection The connection to use
+      # @raise [Google::Auth::AuthorizationError] If the revocation request fails
       def revoke! options = {}
         c = options[:connection] || Faraday.default_connection
 

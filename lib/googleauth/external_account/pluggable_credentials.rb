@@ -42,11 +42,10 @@ module Google
 
         # Initialize from options map.
         #
-        # @param [string] audience
-        # @param [hash{symbol => value}] credential_source
-        #     credential_source is a hash that contains either source file or url.
-        #     credential_source_format is either text or json. To define how we parse the credential response.
-        #
+        # @param [Hash] options Configuration options
+        # @option options [String] :audience Audience for the token
+        # @option options [Hash] :credential_source Credential source configuration that contains executable configuration
+        # @raise [Google::Auth::InitializationError] If executable source, command is missing, or timeout is invalid
         def initialize options = {}
           base_setup options
 
@@ -67,6 +66,11 @@ module Google
           @credential_source_executable_output_file = @credential_source_executable[:output_file]
         end
 
+        # Retrieves the subject token using the credential_source object.
+        #
+        # @return [String] The retrieved subject token
+        # @raise [Google::Auth::CredentialsError] If executables are not allowed, if token retrieval fails, 
+        #   or if the token is invalid
         def retrieve_subject_token!
           unless ENV[ENABLE_PLUGGABLE_ENV] == "1"
             raise CredentialsError, "Executables need to be explicitly allowed (set GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES to '1') " \

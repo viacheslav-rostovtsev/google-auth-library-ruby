@@ -202,8 +202,8 @@ module Google
       #
       # @param _options [Hash] (optional) Additional options for token retrieval (currently unused).
       #
-      # @raise [Signet::UnexpectedStatusError] If the response status is 403 or 500.
-      # @raise [Signet::AuthorizationError] For other unexpected response statuses.
+      # @raise [Google::Auth::UnexpectedStatusError] If the response status is 403 or 500.
+      # @raise [Google::Auth::AuthorizationError] For other unexpected response statuses.
       #
       # @return [String] The newly generated impersonation access token.
       def fetch_access_token! _options = {}
@@ -249,7 +249,7 @@ module Google
       #
       # @return [Time, nil] The normalized Time object, or nil if the input is nil.
       #
-      # @raise [RuntimeError] If the input is not a Time, String, or nil.
+      # @raise [Google::Auth::CredentialsError] If the input is not a Time, String, or nil.
       def normalize_timestamp time
         case time
         when NilClass

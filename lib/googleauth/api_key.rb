@@ -85,6 +85,7 @@ module Google
       # @option options [String] :universe_domain
       #   The universe domain of the universe this API key
       #   belongs to (defaults to googleapis.com)
+      # @raise [ArgumentError] If the API key is nil or empty
       def initialize options = {}
         raise ArgumentError, "API key must be provided" if options[:api_key].nil? || options[:api_key].empty?
         @api_key = options[:api_key]
