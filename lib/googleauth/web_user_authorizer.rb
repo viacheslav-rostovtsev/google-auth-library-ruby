@@ -80,6 +80,8 @@ module Google
       #
       # @param [Rack::Request] request
       #  Current request
+      # @return [String, nil]
+      #  Redirect URI if successfully extracted, nil otherwise
       def self.handle_auth_callback_deferred request
         callback_state, redirect_uri = extract_callback_state request
         request.session[CALLBACK_STATE_KEY] = MultiJson.dump callback_state
@@ -152,11 +154,13 @@ module Google
       #  Optional key-values to be returned to the oauth callback.
       # @return [String]
       #  Authorization url
+      # @raise [Google::Auth::InitializationError]
+      #  If request is nil or request.session is nil
       def get_authorization_url options = {}
         options = options.dup
         request = options[:request]
-        raise NIL_REQUEST_ERROR if request.nil?
-        raise NIL_SESSION_ERROR if request.session.nil?
+        raise InitializationError, NIL_REQUEST_ERROR if request.nil?
+        raise InitializationError, NIL_SESSION_ERROR if request.session.nil?
 
         state = options[:state] || {}
 
@@ -183,8 +187,8 @@ module Google
       # @return [Google::Auth::UserRefreshCredentials]
       #  Stored credentials, nil if none present
       # @raise [Google::Auth::AuthorizationError]
-      #  May raise an error if an authorization code is present in the session
-      #  and exchange of the code fails
+      #  If the authorization code is missing, there's an error in the request,
+      #  or the state token doesn't match
       def get_credentials user_id, request = nil, scope = nil
         if request&.session&.key? CALLBACK_STATE_KEY
           # Note - in theory, no need to check required scope as this is
@@ -203,6 +207,12 @@ module Google
         end
       end
 
+      # Extract the callback state from the request
+      #
+      # @param [Rack::Request] request
+      #  Current request
+      # @return [Array<Hash, String>]
+      #  Callback state and redirect URI
       def self.extract_callback_state request
         state = MultiJson.load(request.params[STATE_PARAM] || "{}")
         redirect_uri = state[CURRENT_URI_KEY]
@@ -225,6 +235,9 @@ module Google
       #  Error message if failed
       # @param [Rack::Request] request
       #  Current request
+      # @raise [Google::Auth::AuthorizationError]
+      #  If the authorization code is missing, there's an error in the callback state,
+      #  or the state token doesn't match
       def self.validate_callback_state state, request
         raise AuthorizationError, MISSING_AUTH_CODE_ERROR if state[AUTH_CODE_KEY].nil?
         if state[ERROR_CODE_KEY]
