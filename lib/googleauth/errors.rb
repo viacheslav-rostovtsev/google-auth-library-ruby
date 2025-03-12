@@ -23,7 +23,8 @@ module Google
     module Error; end
 
     ##
-    # Error raised during initialization of Credentials
+    # Error raised during Credentials initialization.
+    # All new code should use this instead of ArgumentError during initializtion.
     #
     class InitializationError < StandardError
       include Error
@@ -31,6 +32,7 @@ module Google
 
     ##
     # Generic error raised during operation of Credentials
+    # This should be used for all purposes not covered by other errors.
     #
     class CredentialsError < StandardError
       include Error
@@ -39,6 +41,8 @@ module Google
     ##
     # An error indicating the remote server refused to authorize the client.
     # Maintains backward compatibility with Signet
+    # This is OK to use in the new code, even if the class is not Signet-based,
+    # as long as there is an exchange with a remote server.
     #
     class AuthorizationError < Signet::AuthorizationError
       include Error
@@ -47,6 +51,7 @@ module Google
     ##
     # An error indicating that the server sent an unexpected http status
     # Maintains backward compatibility with Signet
+    # Should not be used in the new code. Use AuthorizationError instead.
     #
     class UnexpectedStatusError < Signet::UnexpectedStatusError
       include Error
@@ -55,6 +60,7 @@ module Google
     ##
     # An error indicating the client failed to parse a value.
     # Maintains backward compatibility with Signet
+    # Should not be used in the new code.
     #
     class ParseError < Signet::ParseError
       include Error
