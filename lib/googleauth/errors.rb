@@ -44,17 +44,28 @@ module Google
       # @return [Hash] Additional details about the error
       attr_reader :details
 
-      # Creates a new error with detailed credential information
-      # @param message [String] The error message
-      # @param options [Hash] The options to create the error with
-      # @option options [String] :credential_type The credential type that raised the error
-      # @option options [String, Symbol] :principal The principal identifier for the credentials
-      # @return [Error] The new error with details
-      def self.with_details message, **options
-        new(message).tap do |error|
-          error.instance_variable_set :@credential_type, options[:credential_type]
-          error.instance_variable_set :@principal, options[:principal]
-          error.instance_variable_set :@details, options
+      # Hacks
+      def self.included(base)
+        base.extend(ClassMethods)
+      end
+
+      # Class methods to be added to including classes
+      module ClassMethods
+        # Creates a new error with detailed information
+        # @param message [String] The error message
+        # @param options [Hash] The options to create the error with
+        # @option options [String] :credential_type The credential type that raised the error
+        # @option options [String, Symbol] :principal The principal identifier for the credentials
+        # @return [Error] The new error with details
+        def with_details message, **options
+          new(message).tap do |error|
+            # Store each option as an instance variable
+            options.each do |key, value|
+              error.instance_variable_set(:"@#{key}", value)
+            end
+            # Also store the entire options hash for convenience
+            error.instance_variable_set(:@details, options)
+          end
         end
       end
     end
