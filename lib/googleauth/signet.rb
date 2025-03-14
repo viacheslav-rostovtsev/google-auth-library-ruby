@@ -117,21 +117,16 @@ module Signet
       # @return [Object] The result of the block if successful
       # @raise [Google::Auth::AuthorizationError] If a Signet::AuthorizationError occurs or if retries are exhausted
       # @raise [Google::Auth::ParseError] If a Signet::ParseError occurs during token parsing
+      # rubocop:disable Metrics/MethodLength
       def retry_with_error max_retry_count = 5
         retry_count = 0
 
         begin
           yield.tap { |resp| log_response resp }
-        rescue Signet::AuthorizationError => e
+        rescue Signet::AuthorizationError, Signet::ParseError => e
           log_auth_error e
-          raise Google::Auth::AuthorizationError.with_details(
-            e.message,
-            credential_type: self.class.name,
-            principal: respond_to?(:principal) ? principal : :signet_client
-          )
-        rescue Signet::ParseError => e
-          log_auth_error e
-          raise Google::Auth::ParseError.with_details(
+          error_class = e.is_a?(Signet::ParseError) ? Google::Auth::ParseError : Google::Auth::AuthorizationError
+          raise error_class.with_details(
             e.message,
             credential_type: self.class.name,
             principal: respond_to?(:principal) ? principal : :signet_client
@@ -153,6 +148,7 @@ module Signet
           end
         end
       end
+      # rubocop:enable Metrics/MethodLength
 
       # Creates a duplicate of these credentials
       # without the Signet::OAuth2::Client-specific

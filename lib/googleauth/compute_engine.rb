@@ -133,6 +133,25 @@ module Google
       # @raise [Google::Auth::UnexpectedStatusError] On unexpected HTTP status codes
       # @raise [Google::Auth::AuthorizationError] If metadata server is unavailable or returns error
       def fetch_access_token _options = {}
+        query, entry = build_metadata_request_params
+        begin
+          log_fetch_query
+          resp = Google::Cloud.env.lookup_metadata_response "instance", entry, query: query
+          log_fetch_resp resp
+          handle_metadata_response resp
+        rescue Google::Cloud::Env::MetadataServerNotResponding => e
+          log_fetch_err e
+          raise AuthorizationError.with_details(
+            e.message,
+            credential_type: self.class.name,
+            principal: principal
+          )
+        end
+      end
+
+      # Builds query parameters and endpoint for metadata request
+      # @return [Array] The query parameters and endpoint path
+      def build_metadata_request_params
         query, entry =
           if token_type == :id_token
             [{ "audience" => target_audience, "format" => "full" }, "service-accounts/default/identity"]
@@ -140,36 +159,32 @@ module Google
             [{}, "service-accounts/default/token"]
           end
         query[:scopes] = Array(scope).join "," if scope
-        begin
-          log_fetch_query
-          resp = Google::Cloud.env.lookup_metadata_response "instance", entry, query: query
-          log_fetch_resp resp
-          case resp.status
-          when 200
-            build_token_hash resp.body, resp.headers["content-type"], resp.retrieval_monotonic_time
-          when 403, 500
-            raise UnexpectedStatusError.with_details(
-              "Unexpected error code #{resp.status} #{UNEXPECTED_ERROR_SUFFIX}",
-              credential_type: self.class.name,
-              principal: principal
-            )
-          when 404
-            raise AuthorizationError.with_details(
-              NO_METADATA_SERVER_ERROR,
-              credential_type: self.class.name,
-              principal: principal
-            )
-          else
-            raise AuthorizationError.with_details(
-              "Unexpected error code #{resp.status} #{UNEXPECTED_ERROR_SUFFIX}",
-              credential_type: self.class.name,
-              principal: principal
-            )
-          end
-        rescue Google::Cloud::Env::MetadataServerNotResponding => e
-          log_fetch_err e
+        [query, entry]
+      end
+
+      # Handles the response from the metadata server
+      # @param [Google::Cloud::Env::MetadataResponse] resp The metadata server response
+      # @return [Hash] The token hash on success
+      # @raise [Google::Auth::UnexpectedStatusError, Google::Auth::AuthorizationError] On error
+      def handle_metadata_response resp
+        case resp.status
+        when 200
+          build_token_hash resp.body, resp.headers["content-type"], resp.retrieval_monotonic_time
+        when 403, 500
+          raise UnexpectedStatusError.with_details(
+            "Unexpected error code #{resp.status} #{UNEXPECTED_ERROR_SUFFIX}",
+            credential_type: self.class.name,
+            principal: principal
+          )
+        when 404
           raise AuthorizationError.with_details(
-            e.message,
+            NO_METADATA_SERVER_ERROR,
+            credential_type: self.class.name,
+            principal: principal
+          )
+        else
+          raise AuthorizationError.with_details(
+            "Unexpected error code #{resp.status} #{UNEXPECTED_ERROR_SUFFIX}",
             credential_type: self.class.name,
             principal: principal
           )
@@ -241,6 +256,18 @@ module Google
         end
       end
 
+      # Constructs a token hash from the metadata server response
+      #
+      # @private
+      # @param [String] body The response body from the metadata server
+      # @param [String] content_type The content type of the response
+      # @param [Float] retrieval_time The monotonic time when the response was retrieved
+      #
+      # @return [Hash] A hash containing:
+      #   - access_token/id_token: The actual token depending on what was requested
+      #   - token_type: The type of token (usually "Bearer")
+      #   - expires_in: Seconds until token expiration (adjusted for freshness)
+      #   - universe_domain: The universe domain for the token (if not overridden)
       def build_token_hash body, content_type, retrieval_time
         hash =
           if ["text/html", "application/text"].include? content_type
