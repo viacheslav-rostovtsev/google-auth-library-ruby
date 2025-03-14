@@ -114,6 +114,12 @@ module Google
               callback_uri: callback_uri
       end
 
+      # Returns the principal identifier for this web authorizer instance
+      # Inherits from the superclass (UserAuthorizer), which returns the client ID
+      #
+      # @return [String] The client ID associated with this authorizer
+
+
       # Handle the result of the oauth callback. Exchanges the authorization
       # code from the request and persists to storage.
       #
@@ -154,7 +160,7 @@ module Google
       #  Optional key-values to be returned to the oauth callback.
       # @return [String]
       #  Authorization url
-      # @raise [Google::Auth::InitializationError]
+      # @raise [Google::Auth::Error]
       #  If request is nil or request.session is nil
       def get_authorization_url options = {}
         options = options.dup
@@ -225,6 +231,15 @@ module Google
         [callback_state, redirect_uri]
       end
 
+      # Returns the principal identifier for this web authorizer
+      # This is a class method that returns a symbol since
+      # we might not have a client_id in the static callback context
+      #
+      # @return [Symbol] The symbol for web user authorization
+      def self.principal
+        :web_user_authorization
+      end
+
       # Verifies the results of an authorization callback
       #
       # @param [Hash] state
@@ -239,12 +254,26 @@ module Google
       #  If the authorization code is missing, there's an error in the callback state,
       #  or the state token doesn't match
       def self.validate_callback_state state, request
-        raise AuthorizationError, MISSING_AUTH_CODE_ERROR if state[AUTH_CODE_KEY].nil?
+        if state[AUTH_CODE_KEY].nil?
+          raise AuthorizationError.with_details(
+            MISSING_AUTH_CODE_ERROR,
+            credential_type: name,
+            principal: principal
+          )
+        end
+
         if state[ERROR_CODE_KEY]
-          raise AuthorizationError,
-                format(AUTHORIZATION_ERROR, state[ERROR_CODE_KEY])
+          raise AuthorizationError.with_details(
+            format(AUTHORIZATION_ERROR, state[ERROR_CODE_KEY]),
+            credential_type: name,
+            principal: principal
+          )
         elsif request.session[XSRF_KEY] != state[SESSION_ID_KEY]
-          raise AuthorizationError, INVALID_STATE_TOKEN_ERROR
+          raise AuthorizationError.with_details(
+            INVALID_STATE_TOKEN_ERROR,
+            credential_type: name,
+            principal: principal
+          )
         end
       end
 

@@ -63,7 +63,7 @@ module Google
       # @param [String] code_verifier
       #  Random string of 43-128 chars used to verify the key exchange using
       #  PKCE.
-      # @raise [Google::Auth::InitializationError]
+      # @raise [Google::Auth::Error]
       #  If client_id is nil or scope is nil
       def initialize client_id, scope, token_store,
                      legacy_callback_uri = nil,
@@ -135,7 +135,7 @@ module Google
       #  the requested scopes
       # @return [Google::Auth::UserRefreshCredentials]
       #  Stored credentials, nil if none present
-      # @raise [Google::Auth::CredentialsError]
+      # @raise [Google::Auth::DetailedError]
       #  If the client ID in the stored token doesn't match the configured client ID
       def get_credentials user_id, scope = nil
         saved_token = stored_token user_id
@@ -143,8 +143,11 @@ module Google
         data = MultiJson.load saved_token
 
         if data.fetch("client_id", @client_id.id) != @client_id.id
-          raise CredentialsError, format(MISMATCHED_CLIENT_ID_ERROR,
-                                         data["client_id"], @client_id.id)
+          raise CredentialsError.with_details(
+            format(MISMATCHED_CLIENT_ID_ERROR, data["client_id"], @client_id.id),
+            credential_type: self.class.name,
+            principal: principal
+          )
         end
 
         credentials = UserRefreshCredentials.new(
@@ -236,6 +239,14 @@ module Google
         nil
       end
 
+      # Returns the principal identifier for this authorizer
+      # The client ID is used as the principal for user authorizers
+      #
+      # @return [String] The client ID associated with this authorizer
+      def principal
+        @client_id.id
+      end
+
       # Store credentials for a user. Generally not required to be
       # called directly, but may be used to migrate tokens from one
       # store to another.
@@ -282,7 +293,7 @@ module Google
       # @param [String] user_id
       #  Unique ID of the user for loading/storing credentials.
       # @return [String] The saved token from @token_store
-      # @raise [Google::Auth::InitializationError]
+      # @raise [Google::Auth::Error]
       #  If user_id is nil or token_store is nil
       def stored_token user_id
         raise InitializationError, NIL_USER_ID_ERROR if user_id.nil?
@@ -311,13 +322,16 @@ module Google
       #  Absolute URL to resolve the callback against if necessary.
       # @return [String]
       #  Redirect URI
-      # @raise [Google::Auth::CredentialsError]
+      # @raise [Google::Auth::DetailedError]
       #  If the callback URI is relative and base_url is nil or not absolute
       def redirect_uri_for base_url
         return @callback_uri if uri_is_postmessage?(@callback_uri) || !URI(@callback_uri).scheme.nil?
         if base_url.nil? || URI(base_url).scheme.nil?
-          raise CredentialsError,
-                format(MISSING_ABSOLUTE_URL_ERROR, @callback_uri)
+          raise CredentialsError.with_details(
+            format(MISSING_ABSOLUTE_URL_ERROR, @callback_uri),
+            credential_type: self.class.name,
+            principal: principal
+          )
         end
         URI.join(base_url, @callback_uri).to_s
       end

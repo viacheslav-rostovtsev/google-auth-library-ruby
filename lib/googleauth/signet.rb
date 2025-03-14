@@ -124,10 +124,18 @@ module Signet
           yield.tap { |resp| log_response resp }
         rescue Signet::AuthorizationError => e
           log_auth_error e
-          raise Google::Auth::AuthorizationError, e.message
+          raise Google::Auth::AuthorizationError.with_details(
+            e.message,
+            credential_type: self.class.name,
+            principal: respond_to?(:principal) ? principal : :signet_client
+          )
         rescue Signet::ParseError => e
           log_auth_error e
-          raise Google::Auth::ParseError, e.message
+          raise Google::Auth::ParseError.with_details(
+            e.message,
+            credential_type: self.class.name,
+            principal: respond_to?(:principal) ? principal : :signet_client
+          )
         rescue StandardError => e
           if retry_count < max_retry_count
             log_transient_error e
@@ -137,7 +145,11 @@ module Signet
           else
             log_retries_exhausted e
             msg = "Unexpected error: #{e.inspect}"
-            raise Google::Auth::AuthorizationError, msg
+            raise Google::Auth::AuthorizationError.with_details(
+              msg,
+              credential_type: self.class.name,
+              principal: respond_to?(:principal) ? principal : :signet_client
+            )
           end
         end
       end

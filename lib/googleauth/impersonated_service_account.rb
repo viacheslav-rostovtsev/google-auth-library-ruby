@@ -239,10 +239,18 @@ module Google
           access_token
         when 403, 500
           msg = "Unexpected error code #{resp.status}.\n #{resp.env.response_body} #{ERROR_SUFFIX}"
-          raise UnexpectedStatusError, msg
+          raise UnexpectedStatusError.with_details(
+            msg,
+            credential_type: self.class.name,
+            principal: principal
+          )
         else
           msg = "Unexpected error code #{resp.status}.\n #{resp.env.response_body} #{ERROR_SUFFIX}"
-          raise AuthorizationError, msg
+          raise AuthorizationError.with_details(
+            msg,
+            credential_type: self.class.name,
+            principal: principal
+          )
         end
       end
 
@@ -264,7 +272,7 @@ module Google
       #
       # @return [Time, nil] The normalized Time object, or nil if the input is nil.
       #
-      # @raise [Google::Auth::CredentialsError] If the input is not a Time, String, or nil.
+      # @raise [Google::Auth::DetailedError] If the input is not a Time, String, or nil.
       def normalize_timestamp time
         case time
         when NilClass

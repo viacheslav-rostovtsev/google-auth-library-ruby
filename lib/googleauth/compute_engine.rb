@@ -148,15 +148,31 @@ module Google
           when 200
             build_token_hash resp.body, resp.headers["content-type"], resp.retrieval_monotonic_time
           when 403, 500
-            raise UnexpectedStatusError, "Unexpected error code #{resp.status} #{UNEXPECTED_ERROR_SUFFIX}"
+            raise UnexpectedStatusError.with_details(
+              "Unexpected error code #{resp.status} #{UNEXPECTED_ERROR_SUFFIX}",
+              credential_type: self.class.name,
+              principal: principal
+            )
           when 404
-            raise AuthorizationError, NO_METADATA_SERVER_ERROR
+            raise AuthorizationError.with_details(
+              NO_METADATA_SERVER_ERROR,
+              credential_type: self.class.name,
+              principal: principal
+            )
           else
-            raise AuthorizationError, "Unexpected error code #{resp.status} #{UNEXPECTED_ERROR_SUFFIX}"
+            raise AuthorizationError.with_details(
+              "Unexpected error code #{resp.status} #{UNEXPECTED_ERROR_SUFFIX}",
+              credential_type: self.class.name,
+              principal: principal
+            )
           end
         rescue Google::Cloud::Env::MetadataServerNotResponding => e
           log_fetch_err e
-          raise AuthorizationError, e.message
+          raise AuthorizationError.with_details(
+            e.message,
+            credential_type: self.class.name,
+            principal: principal
+          )
         end
       end
 

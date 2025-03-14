@@ -15,7 +15,7 @@ that exposes common initialization functionality, such as creating credentials f
 
 ## Simple Authentication (non-OAuth)
 
-1. **Google::Auth::APIKeyCredentials** - `lib/googleauth/api_key.rb`
+**Google::Auth::APIKeyCredentials** - `lib/googleauth/api_key.rb`
    - Includes `Google::Auth::BaseClient` module
    - Implements Google API Key authentication
    - API Keys are text strings that don't have an associated JSON file
@@ -72,6 +72,10 @@ that exposes common initialization functionality, such as creating credentials f
    - Authenticates on behalf of a user who has authorized the application
    - Handles token refresh when original access token expires
    - Typically obtained through web or installed application flow
+
+`Google::Auth::UserAuthorizer` (`lib/googleauth/user_authorizer.rb`) and `Google::Auth::WebUserAuthorizer` (`lib/googleauth/web_user_authorizer.rb`)
+ are used to facilitate user authentication. The `UserAuthorizer` handles interactive 3-Legged-OAuth2 (3LO) user consent authorization for command-line applications.
+ The `WebUserAuthorizer` is a variation of UserAuthorizer adapted for Rack-based web applications that manages OAuth state and provides callback handling.
 
 ## External Account Authentication
   `Google::Auth::ExternalAccount::Credentials` (`lib/googleauth/external_account.rb`) is not a credentials type, it is a module
