@@ -44,7 +44,8 @@ module Google
         #
         # @param [Hash] options Configuration options
         # @option options [String] :audience Audience for the token
-        # @option options [Hash] :credential_source Credential source configuration that contains executable configuration
+        # @option options [Hash] :credential_source Credential source configuration that contains executable
+        #   configuration
         # @raise [Google::Auth::InitializationError] If executable source, command is missing, or timeout is invalid
         def initialize options = {}
           base_setup options
@@ -52,7 +53,10 @@ module Google
           @audience = options[:audience]
           @credential_source = options[:credential_source] || {}
           @credential_source_executable = @credential_source[:executable]
-          raise InitializationError, "Missing excutable source. An 'executable' must be provided" if @credential_source_executable.nil?
+          if @credential_source_executable.nil?
+            raise InitializationError,
+                  "Missing excutable source. An 'executable' must be provided"
+          end
           @credential_source_executable_command = @credential_source_executable[:command]
           if @credential_source_executable_command.nil?
             raise InitializationError, "Missing command field. Executable command must be provided."
@@ -69,11 +73,12 @@ module Google
         # Retrieves the subject token using the credential_source object.
         #
         # @return [String] The retrieved subject token
-        # @raise [Google::Auth::CredentialsError] If executables are not allowed, if token retrieval fails, 
+        # @raise [Google::Auth::CredentialsError] If executables are not allowed, if token retrieval fails,
         #   or if the token is invalid
         def retrieve_subject_token!
           unless ENV[ENABLE_PLUGGABLE_ENV] == "1"
-            raise CredentialsError, "Executables need to be explicitly allowed (set GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES to '1') " \
+            raise CredentialsError,
+                  "Executables need to be explicitly allowed (set GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES to '1') " \
                   "to run."
           end
           # check output file first
@@ -113,12 +118,16 @@ module Google
             if response[:code].nil? || response[:message].nil?
               raise CredentialsError, "Error code and message fields are required in the response."
             end
-            raise CredentialsError, "Executable returned unsuccessful response: code: #{response[:code]}, message: #{response[:message]}."
+            raise CredentialsError,
+                  "Executable returned unsuccessful response: code: #{response[:code]}, message: #{response[:message]}."
           end
           if response[:expiration_time] && response[:expiration_time] < Time.now.to_i
             raise CredentialsError, "The token returned by the executable is expired."
           end
-          raise CredentialsError, "The executable response is missing the token_type field." if response[:token_type].nil?
+          if response[:token_type].nil?
+            raise CredentialsError,
+                  "The executable response is missing the token_type field."
+          end
           return response[:id_token] if ID_TOKEN_TYPE.include? response[:token_type]
           return response[:saml_response] if response[:token_type] == "urn:ietf:params:oauth:token-type:saml2"
           raise CredentialsError, "Executable returned unsupported token type."
@@ -150,7 +159,8 @@ module Google
           Timeout.timeout timeout_seconds do
             output, error, status = Open3.capture3 environment_vars, command
             unless status.success?
-              raise CredentialsError, "Executable exited with non-zero return code #{status.exitstatus}. Error: #{output}, #{error}"
+              raise CredentialsError,
+                    "Executable exited with non-zero return code #{status.exitstatus}. Error: #{output}, #{error}"
             end
             output
           end

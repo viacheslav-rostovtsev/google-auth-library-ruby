@@ -122,7 +122,7 @@ module Google
           rescue Faraday::Error => e
             raise CredentialsError, "Fetching AWS IMDSV2 token error: #{e}"
           end
-          
+
           @imdsv2_session_token = response.body
           @imdsv2_session_token_expiry = Time.now + IMDSV2_TOKEN_EXPIRATION_IN_SECONDS
           @imdsv2_session_token
@@ -214,13 +214,16 @@ module Google
         # Reads the name of the AWS region from the environment
         #
         # @return [String] The name of the AWS region
-        # @raise [Google::Auth::CredentialsError] If the region is not set in the environment 
+        # @raise [Google::Auth::CredentialsError] If the region is not set in the environment
         #   and the region_url was not set in credentials source
         def region
           @region = ENV[CredentialsLoader::AWS_REGION_VAR] || ENV[CredentialsLoader::AWS_DEFAULT_REGION_VAR]
 
           unless @region
-            raise CredentialsError, "region_url or region must be set for external account credentials" unless @region_url
+            unless @region_url
+              raise CredentialsError,
+                    "region_url or region must be set for external account credentials"
+            end
 
             @region ||= get_aws_resource(@region_url, "region").body[0..-2]
           end

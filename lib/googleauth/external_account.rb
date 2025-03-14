@@ -39,7 +39,9 @@ module Google
         # @param options [Hash] Options for creating credentials
         # @option options [IO] :json_key_io (required) An IO object containing the JSON key
         # @option options [String,Array,nil] :scope The scope(s) to access
-        # @return [Google::Auth::ExternalAccount::AwsCredentials,Google::Auth::ExternalAccount::IdentityPoolCredentials,Google::Auth::ExternalAccount::PluggableAuthCredentials]
+        # @return [Google::Auth::ExternalAccount::AwsCredentials,
+        #   Google::Auth::ExternalAccount::IdentityPoolCredentials,
+        #   Google::Auth::ExternalAccount::PluggableAuthCredentials]
         #   The appropriate external account credentials based on the credential source
         # @raise [Google::Auth::InitializationError] If the json file is missing, lacks required fields,
         #   or does not contain a supported credential source
@@ -96,7 +98,8 @@ module Google
           # Creates the appropriate external account credentials based on the credential source type
           #
           # @param user_creds [Hash] The user credentials containing credential source information
-          # @return [Google::Auth::ExternalAccount::IdentityPoolCredentials,Google::Auth::ExternalAccount::PluggableAuthCredentials]
+          # @return [Google::Auth::ExternalAccount::IdentityPoolCredentials,
+          #   Google::Auth::ExternalAccount::PluggableAuthCredentials]
           #   The appropriate external account credentials
           # @raise [Google::Auth::InitializationError] If the credential source is not a supported type
           def make_external_account_credentials user_creds

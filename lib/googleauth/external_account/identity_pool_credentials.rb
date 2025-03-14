@@ -37,7 +37,7 @@ module Google
         # @option options [String] :audience The audience for the token
         # @option options [Hash{Symbol => Object}] :credential_source A hash containing either source file or url.
         #     credential_source_format is either text or json to define how to parse the credential response.
-        # @raise [Google::Auth::InitializationError] If credential_source format is invalid, field_name is missing, 
+        # @raise [Google::Auth::InitializationError] If credential_source format is invalid, field_name is missing,
         #     contains ambiguous sources, or is missing required fields
         #
         def initialize options = {}
@@ -55,7 +55,7 @@ module Google
 
         # Implementation of BaseCredentials retrieve_subject_token!
         #
-        # @return [String] The subject token 
+        # @return [String] The subject token
         # @raise [Google::Auth::CredentialsError] If the token can't be parsed from JSON or is missing
         def retrieve_subject_token!
           content, resource_name = token_data
@@ -67,7 +67,7 @@ module Google
               token = response_data[@credential_source_field_name.to_sym]
             rescue StandardError
               raise CredentialsError, "Unable to parse subject_token from JSON resource #{resource_name} " \
-                    "using key #{@credential_source_field_name}"
+                                      "using key #{@credential_source_field_name}"
             end
           end
           raise CredentialsError, "Missing subject_token in the credential_source file/response." unless token
@@ -78,7 +78,7 @@ module Google
 
         # Validates input
         #
-        # @raise [Google::Auth::InitializationError] If credential_source format is invalid, field_name is missing, 
+        # @raise [Google::Auth::InitializationError] If credential_source format is invalid, field_name is missing,
         #     contains ambiguous sources, or is missing required fields
         def validate_credential_source
           # `environment_id` is only supported in AWS or dedicated future external account credentials.
@@ -110,7 +110,10 @@ module Google
         # @return [Array(String, String)] The file content and file path
         # @raise [Google::Auth::CredentialsError] If the source file doesn't exist
         def file_data
-          raise CredentialsError, "File #{@credential_source_file} was not found." unless File.exist? @credential_source_file
+          unless File.exist? @credential_source_file
+            raise CredentialsError,
+                  "File #{@credential_source_file} was not found."
+          end
           content = File.read @credential_source_file, encoding: "utf-8"
           [content, @credential_source_file]
         end
@@ -128,7 +131,10 @@ module Google
           rescue Faraday::Error => e
             raise CredentialsError, "Error retrieving from credential url: #{e}"
           end
-          raise CredentialsError, "Unable to retrieve Identity Pool subject token #{response.body}" unless response.success?
+          unless response.success?
+            raise CredentialsError,
+                  "Unable to retrieve Identity Pool subject token #{response.body}"
+          end
           [response.body, @credential_source_url]
         end
       end

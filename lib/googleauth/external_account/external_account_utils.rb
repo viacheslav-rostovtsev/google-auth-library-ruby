@@ -37,7 +37,7 @@ module Google
         # call this API or the required scopes may not be selected:
         # https://cloud.google.com/resource-manager/reference/rest/v1/projects/get#authorization-scopes
         #
-        # @return [String, nil] The project ID corresponding to the workload identity 
+        # @return [String, nil] The project ID corresponding to the workload identity
         #   pool or workforce pool if determinable
         #
         def project_id
@@ -96,7 +96,7 @@ module Google
 
         # Extracts the service account email from the impersonation URL
         #
-        # @return [String, nil] The service account email extracted from the 
+        # @return [String, nil] The service account email extracted from the
         #   service_account_impersonation_url, or nil if it cannot be determined
         def service_account_email
           return nil if @service_account_impersonation_url.nil?

@@ -396,7 +396,10 @@ module Google
       # @raise [ArgumentError] If both scope and target_audience are specified
       #
       def initialize source_creds, options = {}
-        raise InitializationError, "The source credentials passed to Google::Auth::Credentials.new were nil." if source_creds.nil?
+        if source_creds.nil?
+          raise InitializationError,
+                "The source credentials passed to Google::Auth::Credentials.new were nil."
+        end
 
         options = symbolize_hash_keys options
         @project_id = options[:project_id] || options[:project]

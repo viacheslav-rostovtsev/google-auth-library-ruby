@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "signet/oauth_2/client"
+
 # Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

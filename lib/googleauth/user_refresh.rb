@@ -125,7 +125,7 @@ module Google
             self.refresh_token = nil
             self.expires_at = 0
           else
-            raise(AuthorizationError, "Unexpected error code #{resp.status}")
+            raise AuthorizationError, "Unexpected error code #{resp.status}"
           end
         end
       end

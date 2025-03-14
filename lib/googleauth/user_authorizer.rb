@@ -63,7 +63,7 @@ module Google
       # @param [String] code_verifier
       #  Random string of 43-128 chars used to verify the key exchange using
       #  PKCE.
-      # @raise [Google::Auth::InitializationError] 
+      # @raise [Google::Auth::InitializationError]
       #  If client_id is nil or scope is nil
       def initialize client_id, scope, token_store,
                      legacy_callback_uri = nil,
@@ -144,7 +144,7 @@ module Google
 
         if data.fetch("client_id", @client_id.id) != @client_id.id
           raise CredentialsError, format(MISMATCHED_CLIENT_ID_ERROR,
-                       data["client_id"], @client_id.id)
+                                         data["client_id"], @client_id.id)
         end
 
         credentials = UserRefreshCredentials.new(
@@ -315,7 +315,10 @@ module Google
       #  If the callback URI is relative and base_url is nil or not absolute
       def redirect_uri_for base_url
         return @callback_uri if uri_is_postmessage?(@callback_uri) || !URI(@callback_uri).scheme.nil?
-        raise CredentialsError, format(MISSING_ABSOLUTE_URL_ERROR, @callback_uri) if base_url.nil? || URI(base_url).scheme.nil?
+        if base_url.nil? || URI(base_url).scheme.nil?
+          raise CredentialsError,
+                format(MISSING_ABSOLUTE_URL_ERROR, @callback_uri)
+        end
         URI.join(base_url, @callback_uri).to_s
       end
 
