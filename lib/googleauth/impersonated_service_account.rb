@@ -191,6 +191,21 @@ module Google
         self.class.new options
       end
 
+      protected
+
+      # The principal behind the credentials. This class allows custom source credentials type
+      # that might not implement `principal`, in which case `:unknown` is returned.
+      #
+      # @return [String, Symbol] The string representation of the principal,
+      #     the token type in lieu of the principal, or :unknown if source principal is unknown.
+      def principal
+        if @source_credentials.respond_to? :principal
+          @source_credentials.principal
+        else
+          :unknown
+        end
+      end
+
       private
 
       # Generates a new impersonation access token by exchanging the source credentials' token
@@ -259,7 +274,8 @@ module Google
         when String
           Time.parse time
         else
-          raise CredentialsError, "Invalid time value #{time}"
+          message = "Invalid time value #{time}"
+          raise CredentialsError.with_details(message, credential_type: self.class.name, principal: principal)
         end
       end
 

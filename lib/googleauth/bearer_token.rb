@@ -134,13 +134,20 @@ module Google
       # @raise [Google::Auth::CredentialsError] If the token is expired.
       def fetch_access_token! _options = {}
         if @expires_at && Time.now >= @expires_at
-          raise CredentialsError, "Bearer token has expired."
+          raise CredentialsError.with_details("Bearer token has expired.", self.class.name, principal)
         end
 
         nil
       end
 
       private
+
+      # For credentials that are initialized with a token without a principal,
+      # the type of that token should be returned as a principal instead
+      # @return [Symbol] the token type in lieu of the principal
+      def principal
+        token_type
+      end
 
       def token_type
         :bearer_token

@@ -92,6 +92,13 @@ module Google
 
         private
 
+        # For external account credentials, the principal is
+        # represented by the audience, such as a workforce pool
+        # @return [String] the GCP principal, e.g. a workforce pool
+        def principal
+          @audience
+        end
+
         def token_type
           # This method is needed for BaseClient
           :access_token

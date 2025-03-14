@@ -164,6 +164,12 @@ module Google
 
         self
       end
+
+      # Returns the client ID as the principal for user refresh credentials
+      # @return [String, Symbol] the client ID or :user_refresh if not available
+      def principal
+        @client_id || :user_refresh
+      end
     end
   end
 end

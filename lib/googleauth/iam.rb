@@ -64,6 +64,12 @@ module Google
       def updater_proc
         proc { |a_hash, _opts = {}| apply a_hash }
       end
+
+      # Returns the IAM authority selector as the principal
+      # @return [String] the IAM authoirty selector
+      def principal
+        @selector
+      end
     end
   end
 end

@@ -168,6 +168,12 @@ module Google
         self
       end
 
+      # Returns the client email as the principal for service account credentials
+      # @return [String] the email address of the service account
+      def principal
+        @issuer
+      end
+
       private
 
       def apply_self_signed_jwt! a_hash

@@ -142,6 +142,13 @@ module Google
 
       protected
 
+      # For credentials that are initialized with a token without a principal,
+      # the type of that token should be returned as a principal instead
+      # @return [Symbol] the token type in lieu of the principal
+      def principal
+        token_type
+      end
+
       # The token type should be :api_key
       def token_type
         :api_key

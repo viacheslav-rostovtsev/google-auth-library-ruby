@@ -159,6 +159,12 @@ module Google
         false
       end
 
+      # Returns the client email as the principal for service account JWT header credentials
+      # @return [String] the email address of the service account
+      def principal
+        @issuer
+      end
+
       private
 
       def deep_hash_normalize old_hash
