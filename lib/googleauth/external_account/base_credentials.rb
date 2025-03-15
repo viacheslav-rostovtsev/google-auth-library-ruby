@@ -134,6 +134,8 @@ module Google
           raise InitializationError, "workforce_pool_user_project should not be set for non-workforce pool credentials."
         end
 
+        # Exchange tokens at STS endpoint
+        # @raise [Google::Auth::AuthorizationError] If the token exchange request fails
         def exchange_token
           additional_options = nil
           if @client_id.nil? && @workforce_pool_user_project
@@ -150,6 +152,12 @@ module Google
           }
           log_token_request token_request
           @sts_client.exchange_token token_request
+        rescue Google::Auth::AuthorizationError => e
+          raise Google::Auth::AuthorizationError.with_details(
+            e.message,
+            credential_type: self.class.name,
+            principal: principal
+          )
         end
 
         def log_token_request token_request

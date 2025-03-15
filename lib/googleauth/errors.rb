@@ -33,11 +33,11 @@ module Google
       include Error
 
       # The type of the credentials that the error was originated from
-      # @return [String] The class name of the credential that raised the error
+      # @return [String,] The class name of the credential that raised the error
       attr_reader :credential_type
 
       # The principal for the authentication flow. Typically obtained from credentials
-      # @return [String, Symbol] The principal identifier associated with the credentials
+      # @return [String, Symbol, nil] The principal identifier associated with the credentials
       attr_reader :principal
 
       # All details passed in the options hash when creating the error
@@ -45,8 +45,8 @@ module Google
       attr_reader :details
 
       # Hacks
-      def self.included(base)
-        base.extend(ClassMethods)
+      def self.included base
+        base.extend ClassMethods
       end
 
       # Class methods to be added to including classes
@@ -61,10 +61,10 @@ module Google
           new(message).tap do |error|
             # Store each option as an instance variable
             options.each do |key, value|
-              error.instance_variable_set(:"@#{key}", value)
+              error.instance_variable_set :"@#{key}", value
             end
             # Also store the entire options hash for convenience
-            error.instance_variable_set(:@details, options)
+            error.instance_variable_set :@details, options
           end
         end
       end
